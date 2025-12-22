@@ -117,7 +117,7 @@ Identify optimal rooftops for solar panel installation by analyzing:
 
 ```bash
 # Clone the repository
-git clone https://github.com/Val-Onyando/ITC-Solar-Panel-Suitability-Mapping.git
+git clone https://github.com/ValOnyando/ITC-Solar-Panel-Suitability-Mapping.git
 cd ITC-Solar-Panel-Suitability-Mapping
 
 # Create virtual environment
