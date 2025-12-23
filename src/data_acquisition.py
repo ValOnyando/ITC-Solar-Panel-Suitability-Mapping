@@ -7,7 +7,9 @@ import requests
 import geopandas as gpd
 from typing import Dict, List, Optional
 import json
+
 # tests 
+print ("test12")
 
 def fetch_building_footprints(bbox: tuple, source: str = "osm") -> gpd.GeoDataFrame:
     """
