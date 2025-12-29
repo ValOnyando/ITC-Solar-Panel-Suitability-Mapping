@@ -3,8 +3,9 @@ Unit tests for data acquisition module.
 """
 
 import pytest
+from src.data_acquisition import PVGISPVCalcClient
 from src.data_acquisition import (
-    fetch_building_footprints,
+    fetch_pdok_buildings_bbox,
     fetch_solar_irradiance,
     fetch_3d_bag_data,
     fetch_osm_building_attributes
