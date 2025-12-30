@@ -1,27 +1,118 @@
 """
 Data Acquisition Module
-Fetches building footprints, OSM attributes, solar irradiance, and 3D building data from external APIs.
+Fetches building footprints, from pdok using WFS services 
+
 """
-# area of intereast 
-
-AOI = r'D:\\Master\\Q2\sci Programming for Geospatial\\Project 1\\Git clone\\ITC-Solar-Panel-Suitability-Mapping\\Data\\Raw\\AOI.geojson'
-Buildings = r'D:/Master/Q2/sci Programming for Geospatial//Project 1/Git clone/ITC-Solar-Panel-Suitability-Mapping/Data/Raw/Buildings_Amsterdam.geojson'
-
-
+from shapely.geometry import box
 import requests
 import geopandas as gpd
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 import json
 import numpy as np
 import time
+from pathlib import Path
+#============================================================
+def fetch_pdok_buildings(
+    area: Union[
+        Tuple[float, float, float, float],  # bbox (WGS84)
+        str,                                 # geojson / shp
+        gpd.GeoDataFrame,
+        gpd.GeoSeries
+    ],
+    output_path: str | None = "buildings.geojson",
+    page_size: int = 1000,
+) -> gpd.GeoDataFrame:
+    """
+    Fetch BAG3D LoD1.2 buildings intersecting `area` using the WFS API.
 
-def fetch_pdok_buildings(buidlings): # enter Buildsing file (shp, geojson)
-    buidlings = gpd.read_file(Buildings)
-    return buidlings
+    This implementation uses the WFS bbox parameter + paging (count/startIndex)
+    to fetch *all* features that intersect the study area. Results are fetched
+    in the BAG3D native CRS (EPSG:28992) and clipped to the exact area.
+    """
+
+   
+    # Normalise study area : if the input was 
+
+    if isinstance(area, tuple):
+        area_gdf = gpd.GeoDataFrame(geometry=[box(*area)], crs="EPSG:4326")
+    elif isinstance(area, (str, Path)):
+        area_gdf = gpd.read_file(area)
+    elif isinstance(area, (gpd.GeoDataFrame, gpd.GeoSeries)):
+        area_gdf = gpd.GeoDataFrame(geometry=area.geometry)
+    else:
+        raise TypeError("Unsupported area input type")
+
+    # target CRS for BAG3D WFS is EPSG:28992
+    area_proj = area_gdf.to_crs("EPSG:28992")
+    minx, miny, maxx, maxy = area_proj.total_bounds
+
     
+    # Page through WFS using bbox :
+   
+    url = "https://data.3dbag.nl/api/BAG3D/wfs"
+    params_base = {
+        "service": "WFS",
+        "version": "2.0.0",
+        "request": "GetFeature",
+        "typeNames": "BAG3D:lod12",
+        "outputFormat": "json",
+        "srsName": "EPSG:28992",
+    }
+
+    features = []
+    start_index = 0
+
+    while True:
+        params = params_base.copy()
+        params.update({
+            "bbox": f"{minx},{miny},{maxx},{maxy}",
+            "count": page_size,
+            "startIndex": start_index,
+        })
+
+        r = requests.get(url, params=params)
+        r.raise_for_status()
+
+        data = r.json()
+        batch = data.get("features", [])
+        if not batch:
+            break
+
+        features.extend(batch)
+        batch_len = len(batch)
+        start_index += batch_len
+
+        # if server returned fewer than requested, we've reached the end
+        if batch_len < page_size:
+            break
+
+    # -----------------------------
+    # 3. Build GeoDataFrame and clip to exact area
+    # -----------------------------
+    if not features:
+        buildings = gpd.GeoDataFrame(columns=["geometry"], geometry="geometry", crs="EPSG:28992")
+    else:
+        buildings = gpd.GeoDataFrame.from_features(features)
+        buildings = buildings.set_crs("EPSG:28992", allow_override=True)
+        buildings = gpd.clip(buildings, area_proj)
+
+    # 4. Save (its optinal)
+    if output_path:
+        buildings.to_file(output_path, driver="GeoJSON")
+
+    return buildings
+
+
+
+
+
+# example for fetching using AOI, its time consuming :)
+Amsterdam = (4.728, 52.278, 5.079, 52.431)
+buildings = fetch_pdok_buildings(Amsterdam)
 
 
 #==============================================================
+
 # solar 
 class PVGISPVCalcClient:
     """
@@ -104,10 +195,10 @@ class PVGISPVCalcClient:
 
 client = PVGISPVCalcClient()
 
-bbox = (4.728, 52.278, 5.079, 52.431)  # Amsterdam
+Amsterdam = (4.728, 52.278, 5.079, 52.431)  # Amsterdam
 
-geojson = client.fetch_bbox_geojson(
-    bbox=bbox,
+geojson = client.fetch_bbox_geojson( #fetching solar PV energy 
+    bbox=Amsterdam,
     step_km=1.0
 )
 

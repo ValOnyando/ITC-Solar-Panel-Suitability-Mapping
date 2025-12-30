@@ -2,13 +2,59 @@
 Spatial Search Module
 Implements spatial search algorithms including KD-tree for efficient nearest neighbor queries.
 """
-
+from src.data_acquisition import fetch_pdok_buildings
 import numpy as np
+import pandas as pd 
 import geopandas as gpd
+from shapely import Point
 from shapely.geometry import Point, Polygon
 from scipy.spatial import KDTree
+from scipy.spatial import cKDTree
 from typing import List, Tuple, Optional
 
+#temp 
+import networkx as nx 
+import matplotlib as plt 
+
+#=============================================
+# Testing and dubbaging 
+#=============================================
+
+Buildings = r'D:/Master/Q2/sci Programming for Geospatial//Project 1/Git clone/ITC-Solar-Panel-Suitability-Mapping/Data/Raw/Buildings_Amsterdam.geojson'
+
+buildings_gdf  =   fetch_pdok_buildings(Buildings)
+
+
+
+buildings_gdf2 = buildings_gdf.copy()
+
+buildings_gdf2['centroid'] = buildings_gdf.geometry.centroid
+buildings_projected  = buildings_gdf2.to_crs(28992)
+buildings_projected.crs
+   # Extract centroids for KD-tree
+
+
+buildings_projected['centroid'] = buildings_gdf2.geometry.centroid
+buildings_projected['x'] = buildings_gdf2.centroid.x
+buildings_projected['y'] = buildings_gdf2.centroid.y
+buildings_projected.crs        
+search = SpatialIndex(buildings_projected)
+
+y = 52.37918055583675
+x = 4.892828083995229
+point = Point(y,x)
+buildings_projected.columns
+search.find_within_radius(point , 10000000)
+
+
+
+
+
+search.find_nearest_neighbors(point , k = 10)
+search.find_within_radius(point, radius = 100)
+
+G = nx.graph
+#============================r==========================================================
 
 class SpatialIndex:
     """
@@ -38,12 +84,15 @@ class SpatialIndex:
         self.buildings_gdf['x'] = self.buildings_gdf.centroid.x
         self.buildings_gdf['y'] = self.buildings_gdf.centroid.y
         
-        # Build KD-tree from centroids
-        self.coordinates = np.column_stack([
-            self.buildings_gdf['x'].values,
-            self.buildings_gdf['y'].values
-        ])
+         # Build KD-tree from centroids
+        x = self.buildings_gdf['x'].to_numpy(dtype=float)
+        y = self.buildings_gdf['y'].to_numpy(dtype=float)
+        self.coordinates = np.column_stack((x, y))
+        
         self.kdtree = KDTree(self.coordinates)
+        
+        
+
         
     def find_nearest_neighbors(
         self,
@@ -51,13 +100,13 @@ class SpatialIndex:
         k: int = 5
     ) -> gpd.GeoDataFrame:
         """
-        Find k nearest buildings to a given point using KD-tree.
+        Find kd nearest buildings to a given point using KD-tree.
         
         Algorithm: KD-tree nearest neighbor search
         Time Complexity: O(log n) average case
         
         Parameters
-        ----------
+        ----------       
         point : Point
             Query point
         k : int
@@ -68,6 +117,7 @@ class SpatialIndex:
         gpd.GeoDataFrame
             k nearest buildings sorted by distance
         """
+        
         query_point = np.array([point.x, point.y])
         
         # KD-tree query: finds k nearest neighbors
@@ -106,9 +156,12 @@ class SpatialIndex:
         
         # KD-tree range query: finds all points within radius
         indices = self.kdtree.query_ball_point(query_point, radius)
-        
-        if len(indices) == 0:
-            return gpd.GeoDataFrame()
+        result = self.buildings_gdf.iloc[indices].copy()
+        if result.empty:
+           print("No buildings found within radius.")
+        return result
+
+
         
         # Return buildings within radius
         nearby_buildings = self.buildings_gdf.iloc[indices].copy()
@@ -118,7 +171,6 @@ class SpatialIndex:
             lambda row: point.distance(row.centroid),
             axis=1
         )
-        
         return nearby_buildings.sort_values('distance')
 
 
@@ -297,3 +349,124 @@ def find_top_k_buildings(
         Top k buildings by score
     """
     return buildings_gdf.nlargest(k, score_column)
+
+
+
+#============================
+
+import numpy as np
+import pandas as pd
+import geopandas as gpd
+from shapely.geometry import Point
+from scipy.spatial import KDTree
+
+
+class SpatialSearch:
+    """
+    Spatial nearest-neighbour search for building-based analysis.
+    """
+
+    def __init__(self, buildings):
+        """
+        Initialise the spatial search using building reference locations.
+
+        Parameters
+        ----------
+        buildings :
+            GeoDataFrame, GeoSeries, DataFrame with x/y,
+            iterable of shapely Points, or NumPy array (n, 2).
+        """
+
+        # Normalise building reference points once
+        self.buildings = self._normalise_points(buildings)
+
+        # Build spatial index once
+        self.kdtree = KDTree(self.buildings)
+
+    # ------------------------------------------------------------------
+    # Internal helper
+    # ------------------------------------------------------------------
+    def _normalise_points(self, points):
+        """
+        Convert supported point formats into a NumPy array of shape (n, 2).
+        """
+
+        # GeoDataFrame → use centroids
+        if isinstance(points, gpd.GeoDataFrame):
+            return np.column_stack(
+                (points.geometry.centroid.x, points.geometry.centroid.y)
+            )
+
+        # GeoSeries (Point geometry)
+        if isinstance(points, gpd.GeoSeries):
+            return np.column_stack((points.x, points.y))
+
+        # pandas DataFrame with x/y columns
+        if isinstance(points, pd.DataFrame):
+            if {"x", "y"}.issubset(points.columns):
+                return points[["x", "y"]].to_numpy()
+
+        # Single shapely Point
+        if isinstance(points, Point):
+            return np.array([[points.x, points.y]])
+
+        # Tuple / list → single point
+        if isinstance(points, (tuple, list)) and len(points) == 2:
+            if all(np.isscalar(v) for v in points):
+                return np.array([[points[0], points[1]]])
+
+        # NumPy array
+        if isinstance(points, np.ndarray):
+            if points.ndim == 1 and points.shape[0] == 2:
+                return points.reshape(1, 2)
+            if points.ndim == 2 and points.shape[1] == 2:
+                return points
+
+        raise TypeError(
+            "Points must be a GeoDataFrame, GeoSeries, DataFrame with x/y, "
+            "shapely Point, (x, y) tuple, or NumPy array of shape (n, 2)."
+        )
+
+    # ------------------------------------------------------------------
+    # Public API
+    # ------------------------------------------------------------------
+    def find_nearest_neighbors(self, points, k=1):
+        """
+        Find k nearest building neighbours for given query points.
+
+        Parameters
+        ----------
+        points :
+            Query locations in any supported point format.
+        k : int
+            Number of nearest neighbours.
+
+        Returns
+        -------
+        distances : np.ndarray
+            Distances to nearest buildings (shape: n x k).
+        indices : np.ndarray
+            Indices of nearest buildings (shape: n x k).
+        """
+
+        if k < 1:
+            raise ValueError("k must be >= 1")
+
+        # Normalise query points
+        query_points = self._normalise_points(points)
+
+        # KDTree query
+        distances, indices = self.kdtree.query(query_points, k=k)
+
+        # Ensure consistent 2D output
+        distances = np.atleast_2d(distances)
+        indices = np.atleast_2d(indices)
+
+        return distances, indices
+
+
+
+search = SpatialSearch(buildings_projected)
+neighbors = search.find_nearest_neighbors(buildings_projected['x' , 'y'].to_numpy)
+len( neighbors)
+

@@ -385,7 +385,7 @@ Contributions are welcome! Here's how you can help:
 ## 📧 Contact
 
 💬 For questions or collaboration opportunities, please open an issue. 
-You can also reach me at: valonyando@gmail.com - Vallary Onyando and Mo Anwar.
+You can also reach me at: valonyando@gmail.com - mohammadanwarx99@gmail.com,  Vallary Onyando and Mo Anwar.
 
 ---
 
