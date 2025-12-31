@@ -196,7 +196,7 @@ if __name__ == "__main__":
     # FULL AMSTERDAM DATA (Run once to fetch complete dataset)
     # Uncomment the block below to fetch full Amsterdam data
     # =============================================================================
-
+    """
     print("=" * 60)
     print("FETCHING FULL AMSTERDAM DATA (This will take about 22 minutes)")
     print("=" * 60)
@@ -216,7 +216,7 @@ if __name__ == "__main__":
     )
     client.save_geojson(geojson_full, "data/solar.json")
     print(f"✓ Saved {len(geojson_full['features'])} solar points to data/solar.json")
-
+    """
     
     # =============================================================================
     # TEST DATA (Smaller area for development and testing)
