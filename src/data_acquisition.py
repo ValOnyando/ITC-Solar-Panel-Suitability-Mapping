@@ -196,9 +196,9 @@ if __name__ == "__main__":
     # FULL AMSTERDAM DATA (Run once to fetch complete dataset)
     # Uncomment the block below to fetch full Amsterdam data
     # =============================================================================
-    """
+
     print("=" * 60)
-    print("FETCHING FULL AMSTERDAM DATA (This will take several minutes)")
+    print("FETCHING FULL AMSTERDAM DATA (This will take about 22 minutes)")
     print("=" * 60)
     
     amsterdam_full = (4.728, 52.278, 5.079, 52.431)  # ~35km × ~17km (full Amsterdam)
@@ -211,12 +211,12 @@ if __name__ == "__main__":
     client = PVGISPVCalcClient()
     geojson_full = client.fetch_bbox_geojson(
         bbox=amsterdam_full,
-        step_km=5.0,  # 5km grid spacing
+        step_km=1.0,  # 1km grid spacing
         sleep=0.01
     )
     client.save_geojson(geojson_full, "data/solar.json")
     print(f"✓ Saved {len(geojson_full['features'])} solar points to data/solar.json")
-    """
+
     
     # =============================================================================
     # TEST DATA (Smaller area for development and testing)
