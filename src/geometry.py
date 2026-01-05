@@ -410,10 +410,19 @@ class BuildingGeometryProcessor:
 # ============================================================================
 
 if __name__ == "__main__":
-    # Use OOP approach to process buildings
+    # =============================================================================
+    # FULL AMSTERDAM DATA (Run once to process complete dataset)
+    # Uncomment the block below to process full Amsterdam data
+    # This will take significant time (~30-60 minutes for full dataset)
+    # =============================================================================
+    """
+    print("=" * 70)
+    print("PROCESSING FULL AMSTERDAM DATA")
+    print("=" * 70)
+    
     processor = BuildingGeometryProcessor(
-        buildings_path="data/test_footprints.json",  # Use test data by default
-        solar_path="data/test_solar.json"
+        buildings_path="data/footprints.json",
+        solar_path="data/solar.json"
     )
     
     # Process all buildings
@@ -429,3 +438,36 @@ if __name__ == "__main__":
     print(f"  Average roof area: {stats['avg_roof_area_m2']:.1f} m²")
     print(f"  Average solar energy: {stats['avg_solar_energy_kwh']:.1f} kWh/year")
     print(f"  Total solar potential: {stats['total_solar_potential_kwh']:,.0f} kWh/year")
+    
+    print("\n✓ Full data processed! Output saved to data/processed_buildings.json")
+    print("  This file can be downloaded directly from the repository.")
+    """
+    
+    # =============================================================================
+    # TEST DATA (Smaller subset for development and testing)
+    # This runs by default for quick iterations
+    # =============================================================================
+    print("=" * 70)
+    print("PROCESSING TEST DATA (Small area for quick testing)")
+    print("=" * 70)
+    
+    processor = BuildingGeometryProcessor(
+        buildings_path="data/test_footprints.json",
+        solar_path="data/test_solar.json"
+    )
+    
+    # Process all buildings
+    processed_buildings = processor.process_all(
+        output_path="data/processed_test_buildings.json"
+    )
+    
+    # Get summary statistics
+    stats = processor.get_summary_statistics()
+    print("\nSummary Statistics:")
+    print(f"  Total buildings: {stats['num_buildings']}")
+    print(f"  Total roof area: {stats['total_roof_area_m2']:,.0f} m²")
+    print(f"  Average roof area: {stats['avg_roof_area_m2']:.1f} m²")
+    print(f"  Average solar energy: {stats['avg_solar_energy_kwh']:.1f} kWh/year")
+    print(f"  Total solar potential: {stats['total_solar_potential_kwh']:,.0f} kWh/year")
+    
+    print("\n✓ Test data processed! Use processed_test_buildings.json for development.")
