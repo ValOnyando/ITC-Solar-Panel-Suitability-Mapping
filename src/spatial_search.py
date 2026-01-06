@@ -1,61 +1,29 @@
 """
-Spatial Search Module
-Implements spatial search algorithms including KD-tree for efficient nearest neighbor queries.
+Spatial Search Modules
+this module's searching function to manipulate and retrieve solar suitability. 
+
+1- SpatialIndex: uses Kd-tree algorithms to retrieve buildings using this functionality 
+  -find_nearest_neighbors
+  -find_within_radius
+  
+  2- other searching functions
+   - binary_search_building_by_score
+   - find_top_k_buildings
+
 """
 from src.data_acquisition import fetch_pdok_buildings
 import numpy as np
 import pandas as pd 
 import geopandas as gpd
-from shapely import Point
 from shapely.geometry import Point, Polygon
-from scipy.spatial import KDTree
-from scipy.spatial import cKDTree
 from typing import List, Tuple, Optional
-
-#temp 
-import networkx as nx 
-import matplotlib as plt 
-
-#=============================================
-# Testing and dubbaging 
-#=============================================
-
-Buildings = r'D:/Master/Q2/sci Programming for Geospatial//Project 1/Git clone/ITC-Solar-Panel-Suitability-Mapping/Data/Raw/Buildings_Amsterdam.geojson'
-
-buildings_gdf  =   fetch_pdok_buildings(Buildings)
+from scipy.spatial import KDTree
+from scipy.spatial import ckdtree
 
 
 
-buildings_gdf2 = buildings_gdf.copy()
-
-buildings_gdf2['centroid'] = buildings_gdf.geometry.centroid
-buildings_projected  = buildings_gdf2.to_crs(28992)
-buildings_projected.crs
-   # Extract centroids for KD-tree
-
-
-buildings_projected['centroid'] = buildings_gdf2.geometry.centroid
-buildings_projected['x'] = buildings_gdf2.centroid.x
-buildings_projected['y'] = buildings_gdf2.centroid.y
-buildings_projected.crs        
-search = SpatialIndex(buildings_projected)
-
-y = 52.37918055583675
-x = 4.892828083995229
-point = Point(y,x)
-buildings_projected.columns
-search.find_within_radius(point , 10000000)
-
-
-
-
-
-search.find_nearest_neighbors(point , k = 10)
-search.find_within_radius(point, radius = 100)
-
-G = nx.graph
-#============================r==========================================================
-
+#=======================================
+# spatial index module
 class SpatialIndex:
     """
     Spatial index using KD-tree for efficient spatial queries.
@@ -177,149 +145,55 @@ class SpatialIndex:
 def binary_search_building_by_score(
     buildings_gdf: gpd.GeoDataFrame,
     target_score: float,
-    score_column: str = 'suitability_score'
-) -> Optional[int]:
+    score_column: str = "suitability_score"
+) -> gpd.GeoDataFrame:
     """
-    Binary search to find building index with score closest to target.
-    
-    Requires: buildings_gdf must be sorted by score_column in ascending order
-    
-    Algorithm: Binary search
-    Time Complexity: O(log n)
-    Space Complexity: O(1)
-    
+    return geo dataframe
+
+    Requires: buildings_gdf must contain score_column.
+
     Parameters
-    ----------
-    buildings_gdf : gpd.GeoDataFrame
-        GeoDataFrame sorted by score column
-    target_score : float
-        Target score to search for
-    score_column : str
-        Column name containing scores
-    
-    Returns
-    -------
-    int or None
-        Index of building with closest score, or None if empty
+    ---------
+    buildings_gdf: gpd.GeoDataFrame
+      buildings to search 
+
+    target_score: float
+      Any : float represent the target score to be searched 
+
+    score_column: str
+      a sutability score colunm in the gpd.GeoDataFrame
     """
-    if len(buildings_gdf) == 0:
-        return None
-    
-    scores = buildings_gdf[score_column].values
+    if buildings_gdf.empty:
+        # return an empty GeoDataFrame with the same schema
+        return buildings_gdf.iloc[0:0].copy()
+
+    # Ensure sorted input for binary search
+    gdf = buildings_gdf.sort_values(score_column).reset_index(drop=True)
+    scores = gdf[score_column].values
+
     left, right = 0, len(scores) - 1
     closest_idx = 0
-    min_diff = float('inf')
-    
+    min_diff = float("inf")
+
     while left <= right:
         mid = (left + right) // 2
-        current_score = scores[mid]
-        diff = abs(current_score - target_score)
-        
-        # Track closest match
+        diff = abs(scores[mid] - target_score)
+
         if diff < min_diff:
             min_diff = diff
             closest_idx = mid
-        
-        if current_score < target_score:
+
+        if scores[mid] < target_score:
             left = mid + 1
-        elif current_score > target_score:
+        elif scores[mid] > target_score:
             right = mid - 1
         else:
-            return mid  # Exact match found
+            break  # exact match
     
-    return closest_idx
+    return gdf.iloc[[closest_idx]]
 
 
-def quicksort_buildings(
-    buildings_gdf: gpd.GeoDataFrame,
-    sort_column: str = 'suitability_score',
-    ascending: bool = False
-) -> gpd.GeoDataFrame:
-    """
-    Sort buildings using quicksort algorithm (for demonstration purposes).
-    
-    Algorithm: Quicksort
-    Time Complexity: O(n log n) average, O(n²) worst case
-    Space Complexity: O(log n) due to recursion
-    
-    Note: In production, use pandas built-in sort which is optimized.
-    This implementation is for educational/demonstration purposes.
-    
-    Parameters
-    ----------
-    buildings_gdf : gpd.GeoDataFrame
-        Buildings to sort
-    sort_column : str
-        Column to sort by
-    ascending : bool
-        Sort order
-    
-    Returns
-    -------
-    gpd.GeoDataFrame
-        Sorted buildings
-    """
-    def quicksort_indices(arr, indices):
-        """Recursive quicksort implementation."""
-        if len(arr) <= 1:
-            return indices
-        
-        pivot = arr[len(arr) // 2]
-        left_indices = [indices[i] for i, x in enumerate(arr) if x < pivot]
-        middle_indices = [indices[i] for i, x in enumerate(arr) if x == pivot]
-        right_indices = [indices[i] for i, x in enumerate(arr) if x > pivot]
-        
-        left_arr = [x for x in arr if x < pivot]
-        right_arr = [x for x in arr if x > pivot]
-        
-        return (quicksort_indices(left_arr, left_indices) + 
-                middle_indices + 
-                quicksort_indices(right_arr, right_indices))
-    
-    values = buildings_gdf[sort_column].values
-    original_indices = list(buildings_gdf.index)
-    
-    sorted_indices = quicksort_indices(list(values), original_indices)
-    
-    if not ascending:
-        sorted_indices = sorted_indices[::-1]
-    
-    return buildings_gdf.loc[sorted_indices]
-
-
-def linear_search_building_by_id(
-    buildings_gdf: gpd.GeoDataFrame,
-    building_id: str,
-    id_column: str = 'building_id'
-) -> Optional[gpd.GeoDataFrame]:
-    """
-    Linear search to find building by ID.
-    
-    Algorithm: Linear search
-    Time Complexity: O(n)
-    Space Complexity: O(1)
-    
-    Parameters
-    ----------
-    buildings_gdf : gpd.GeoDataFrame
-        Buildings to search
-    building_id : str
-        Building ID to find
-    id_column : str
-        Column name for building IDs
-    
-    Returns
-    -------
-    gpd.GeoDataFrame or None
-        Building with matching ID, or None if not found
-    """
-    for idx, row in buildings_gdf.iterrows():
-        if str(row[id_column]) == str(building_id):
-            return buildings_gdf.loc[[idx]]
-    
-    return None
-
-
+   
 def find_top_k_buildings(
     buildings_gdf: gpd.GeoDataFrame,
     k: int,
@@ -348,125 +222,12 @@ def find_top_k_buildings(
     gpd.GeoDataFrame
         Top k buildings by score
     """
+    if buildings_gdf.empty or k <= 0:
+        return buildings_gdf.iloc[0:0].copy()
+
+    if score_column not in buildings_gdf.columns:
+        raise KeyError(f"Column '{score_column}' not found")
+
     return buildings_gdf.nlargest(k, score_column)
 
-
-
-#============================
-
-import numpy as np
-import pandas as pd
-import geopandas as gpd
-from shapely.geometry import Point
-from scipy.spatial import KDTree
-
-
-class SpatialSearch:
-    """
-    Spatial nearest-neighbour search for building-based analysis.
-    """
-
-    def __init__(self, buildings):
-        """
-        Initialise the spatial search using building reference locations.
-
-        Parameters
-        ----------
-        buildings :
-            GeoDataFrame, GeoSeries, DataFrame with x/y,
-            iterable of shapely Points, or NumPy array (n, 2).
-        """
-
-        # Normalise building reference points once
-        self.buildings = self._normalise_points(buildings)
-
-        # Build spatial index once
-        self.kdtree = KDTree(self.buildings)
-
-    # ------------------------------------------------------------------
-    # Internal helper
-    # ------------------------------------------------------------------
-    def _normalise_points(self, points):
-        """
-        Convert supported point formats into a NumPy array of shape (n, 2).
-        """
-
-        # GeoDataFrame → use centroids
-        if isinstance(points, gpd.GeoDataFrame):
-            return np.column_stack(
-                (points.geometry.centroid.x, points.geometry.centroid.y)
-            )
-
-        # GeoSeries (Point geometry)
-        if isinstance(points, gpd.GeoSeries):
-            return np.column_stack((points.x, points.y))
-
-        # pandas DataFrame with x/y columns
-        if isinstance(points, pd.DataFrame):
-            if {"x", "y"}.issubset(points.columns):
-                return points[["x", "y"]].to_numpy()
-
-        # Single shapely Point
-        if isinstance(points, Point):
-            return np.array([[points.x, points.y]])
-
-        # Tuple / list → single point
-        if isinstance(points, (tuple, list)) and len(points) == 2:
-            if all(np.isscalar(v) for v in points):
-                return np.array([[points[0], points[1]]])
-
-        # NumPy array
-        if isinstance(points, np.ndarray):
-            if points.ndim == 1 and points.shape[0] == 2:
-                return points.reshape(1, 2)
-            if points.ndim == 2 and points.shape[1] == 2:
-                return points
-
-        raise TypeError(
-            "Points must be a GeoDataFrame, GeoSeries, DataFrame with x/y, "
-            "shapely Point, (x, y) tuple, or NumPy array of shape (n, 2)."
-        )
-
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
-    def find_nearest_neighbors(self, points, k=1):
-        """
-        Find k nearest building neighbours for given query points.
-
-        Parameters
-        ----------
-        points :
-            Query locations in any supported point format.
-        k : int
-            Number of nearest neighbours.
-
-        Returns
-        -------
-        distances : np.ndarray
-            Distances to nearest buildings (shape: n x k).
-        indices : np.ndarray
-            Indices of nearest buildings (shape: n x k).
-        """
-
-        if k < 1:
-            raise ValueError("k must be >= 1")
-
-        # Normalise query points
-        query_points = self._normalise_points(points)
-
-        # KDTree query
-        distances, indices = self.kdtree.query(query_points, k=k)
-
-        # Ensure consistent 2D output
-        distances = np.atleast_2d(distances)
-        indices = np.atleast_2d(indices)
-
-        return distances, indices
-
-
-
-search = SpatialSearch(buildings_projected)
-neighbors = search.find_nearest_neighbors(buildings_projected['x' , 'y'].to_numpy)
-len( neighbors)
 

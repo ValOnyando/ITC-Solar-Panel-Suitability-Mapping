@@ -11,6 +11,7 @@ import json
 import numpy as np
 import time
 from pathlib import Path
+
 #============================================================
 def fetch_pdok_buildings(
     area: Union[
@@ -19,7 +20,7 @@ def fetch_pdok_buildings(
         gpd.GeoDataFrame,
         gpd.GeoSeries
     ],
-    output_path: str | None = "buildings.geojson",
+    output_path: Optional[str] = "buildings.geojson",
     page_size: int = 1000,
 ) -> gpd.GeoDataFrame:
     """
@@ -86,9 +87,9 @@ def fetch_pdok_buildings(
         if batch_len < page_size:
             break
 
-    # -----------------------------
+    # ----------------------------------------
     # 3. Build GeoDataFrame and clip to exact area
-    # -----------------------------
+   
     if not features:
         buildings = gpd.GeoDataFrame(columns=["geometry"], geometry="geometry", crs="EPSG:28992")
     else:
@@ -101,15 +102,6 @@ def fetch_pdok_buildings(
         buildings.to_file(output_path, driver="GeoJSON")
 
     return buildings
-
-
-
-
-
-# example for fetching using AOI, its time consuming :)
-Amsterdam = (4.728, 52.278, 5.079, 52.431)
-buildings = fetch_pdok_buildings(Amsterdam)
-
 
 #==============================================================
 
@@ -191,14 +183,3 @@ class PVGISPVCalcClient:
     def save_geojson(self, geojson, filepath):
         with open(filepath, "w", encoding="utf-8") as f:
             json.dump(geojson, f, indent=2)
-
-
-client = PVGISPVCalcClient()
-
-Amsterdam = (4.728, 52.278, 5.079, 52.431)  # Amsterdam
-
-geojson = client.fetch_bbox_geojson( #fetching solar PV energy 
-    bbox=Amsterdam,
-    step_km=1.0
-)
-
