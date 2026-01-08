@@ -340,10 +340,10 @@ pytest tests/ --cov=src  # With coverage report
 ### 🗺️ Choropleth Maps
 - Solar potential by neighborhood
 - Average suitability by district
-![Buildings solar potential map](outputs/Buildings-solar-potential.png)
-
 </td>
 <td width="33%">
+    
+![Buildings solar potential map](outputs/Buildings-solar-potential.png)
 
 ### 🎨 Interactive Maps
 - Color-coded suitability scores
