@@ -2,6 +2,7 @@
 Ranking Module
 Calculates suitability scores and ranks buildings for solar panel installation.
 """
+# Wednesday
 
 import numpy as np
 import pandas as pd
@@ -133,3 +134,91 @@ def get_priority_list(
     """
     ranked = rank_buildings(buildings_gdf)
     return ranked.head(top_n)
+
+
+# ============================================================================
+# Main execution
+# ============================================================================
+
+if __name__ == "__main__":
+    # =============================================================================
+    # FULL AMSTERDAM DATA (Run once to rank complete dataset)
+    # Uncomment the block below to process full Amsterdam data
+    # =============================================================================
+    """
+    print("=" * 70)
+    print("RANKING FULL AMSTERDAM DATA")
+    print("=" * 70)
+    
+    # Load processed buildings
+    buildings_gdf = gpd.read_file("data/processed_buildings.json")
+    
+    # Calculate suitability scores
+    print("Calculating suitability scores...")
+    buildings_gdf['suitability_score'] = buildings_gdf.apply(
+        lambda row: calculate_suitability_score(
+            roof_area=row.get('roof_area_m2', 0),
+            energy_potential=row.get('solar_energy_kwh', 0),
+            shading_factor=row.get('shading_factor', 0),
+            orientation=row.get('roof_orientation_deg', 0)
+        ), axis=1
+    )
+    
+    # Rank buildings
+    print("Ranking buildings...")
+    ranked_buildings = rank_buildings(buildings_gdf)
+    
+    # Save ranked results
+    ranked_buildings.to_file("data/ranked_buildings.json", driver="GeoJSON")
+    print(f"✓ Ranked {len(ranked_buildings)} buildings saved to data/ranked_buildings.json")
+    
+    # Get top priority buildings
+    top_buildings = get_priority_list(ranked_buildings, top_n=100)
+    top_buildings.to_file("data/top_100_buildings.json", driver="GeoJSON")
+    print(f"✓ Top 100 buildings saved to data/top_100_buildings.json")
+    
+    print(f"\nTop 5 Buildings:")
+    for idx, row in top_buildings.head(5).iterrows():
+        print(f"  Rank {row['rank']}: Score {row['suitability_score']:.2f}")
+    """
+    
+    # =============================================================================
+    # TEST DATA (Smaller subset for development and testing)
+    # This runs by default for quick iterations
+    # =============================================================================
+    print("=" * 70)
+    print("RANKING TEST DATA (Small area for quick testing)")
+    print("=" * 70)
+    
+    # Load processed test buildings
+    buildings_gdf = gpd.read_file("data/processed_test_buildings.json")
+    
+    # Calculate suitability scores
+    print("Calculating suitability scores...")
+    buildings_gdf['suitability_score'] = buildings_gdf.apply(
+        lambda row: calculate_suitability_score(
+            roof_area=row.get('roof_area_m2', 0),
+            energy_potential=row.get('solar_energy_kwh', 0),
+            shading_factor=row.get('shading_factor', 0),
+            orientation=row.get('roof_orientation_deg', 0)
+        ), axis=1
+    )
+    
+    # Rank buildings
+    print("Ranking buildings...")
+    ranked_buildings = rank_buildings(buildings_gdf)
+    
+    # Save ranked results
+    ranked_buildings.to_file("data/ranked_test_buildings.json", driver="GeoJSON")
+    print(f"✓ Ranked {len(ranked_buildings)} buildings saved to data/ranked_test_buildings.json")
+    
+    # Get top priority buildings
+    top_buildings = get_priority_list(ranked_buildings, top_n=20)
+    top_buildings.to_file("data/top_20_test_buildings.json", driver="GeoJSON")
+    print(f"✓ Top 20 buildings saved to data/top_20_test_buildings.json")
+    
+    print(f"\nTop 5 Buildings:")
+    for idx, row in top_buildings.head(5).iterrows():
+        print(f"  Rank {row['rank']}: Score {row['suitability_score']:.2f}")
+    
+    print("\n✓ Test data ranking complete!")
