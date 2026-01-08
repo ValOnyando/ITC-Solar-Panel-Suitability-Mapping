@@ -343,7 +343,7 @@ pytest tests/ --cov=src  # With coverage report
 </td>
 <td width="33%">
     
-![Buildings solar potential map](outputs/Buildings-solar-potential.png)
+
 
 ### 🎨 Interactive Maps
 - Color-coded suitability scores
@@ -364,7 +364,8 @@ pytest tests/ --cov=src  # With coverage report
 </table>
 
 ---
-
+![Buildings solar potential map](outputs/Buildings-solar-potential.png)
+---
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
