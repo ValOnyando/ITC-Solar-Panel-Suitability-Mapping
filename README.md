@@ -115,6 +115,36 @@ Identify optimal rooftops for solar panel installation by analyzing:
 
 ## 🚀 Installation
 
+### Prerequisites
+- Python 3.8 or higher
+- [Poetry](https://python-poetry.org/) (recommended) or pip
+
+### Option 1: Using Poetry (Recommended)
+
+Poetry provides better dependency management and isolated environments.
+
+```bash
+# Clone the repository
+git clone https://github.com/ValOnyando/ITC-Solar-Panel-Suitability-Mapping.git
+cd ITC-Solar-Panel-Suitability-Mapping
+
+# Install Poetry (if not already installed)
+curl -sSL https://install.python-poetry.org | python3 -
+# Or on Windows (PowerShell):
+# (Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | py -
+
+# Install all dependencies (including dev dependencies)
+poetry install
+
+# Or install without dev dependencies
+poetry install --only main
+
+# Activate the virtual environment
+poetry shell
+```
+
+### Option 2: Using pip
+
 ```bash
 # Clone the repository
 git clone https://github.com/ValOnyando/ITC-Solar-Panel-Suitability-Mapping.git
@@ -124,16 +154,69 @@ cd ITC-Solar-Panel-Suitability-Mapping
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# Install dependencies (Option 1: using requirements.txt)
+# Install dependencies
 pip install -r requirements.txt
+```
 
-# Or install dependencies manually (Option 2)
-pip install geopandas rasterio shapely folium numpy pandas matplotlib seaborn requests pytest
+### Verify Installation
+
+```bash
+# Using Poetry
+poetry run pytest
+
+# Using pip
+pytest
 ```
 
 ---
 
 ## 💻 Usage
+
+### Running the Pipeline
+
+#### Using Poetry
+
+```bash
+# 1. Data Acquisition - Fetch building and solar data
+poetry run python src/data_acquisition.py
+
+# 2. Geometry Processing - Calculate roof properties
+poetry run python src/geometry.py
+
+# 3. Shading Analysis - Analyze shadows from nearby buildings
+poetry run python src/shading.py
+
+# 4. Solar Calculations - Calculate energy potential
+poetry run python src/solar.py
+
+# 5. Ranking - Rank buildings by suitability
+poetry run python src/ranking.py
+
+# 6. Run API server
+poetry run solar-api
+# Or: poetry run python src/api.py
+
+# Run tests
+poetry run pytest
+poetry run pytest --cov=src  # With coverage
+
+# Format code
+poetry run black src/ tests/
+```
+
+#### Using pip
+
+```bash
+# Run scripts
+python src/data_acquisition.py
+python src/geometry.py
+# ... etc
+
+# Run tests
+pytest
+```
+
+### Code Examples
 
 ### 🌤️ Fetch Solar Irradiance Data
 ```python
@@ -322,11 +405,29 @@ Unit tests are implemented for critical components:
 | Solar energy estimation functions | ✅ |
 | Building ranking algorithms | ✅ |
 | Geometric analysis functions | ✅ |
+| Shading analysis algorithms | ✅ |
 
 **Run tests:**
 ```bash
+# Using Poetry
+poetry run pytest
+poetry run pytest -v                    # Verbose output
+poetry run pytest --cov=src            # With coverage report
+poetry run pytest --cov=src --cov-report=html  # HTML coverage report
+
+# Using pip
 pytest tests/ -v
-pytest tests/ --cov=src  # With coverage report
+pytest tests/ --cov=src
+```
+
+**Run specific test files:**
+```bash
+# Using Poetry
+poetry run pytest tests/test_geometry.py
+poetry run pytest tests/test_solar.py -v
+
+# Using pip
+pytest tests/test_geometry.py
 ```
 
 ---
@@ -377,6 +478,27 @@ Contributions are welcome! Here's how you can help:
 1. 🍴 Fork the repository
 2. 🔨 Create a feature branch (`git checkout -b feature/AmazingFeature`)
 3. 💾 Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. 🚀 Push to the branch (`git push origin feature/AmazingFeature`)
+5. 📬 Open a Pull Request
+
+### Development Setup
+
+```bash
+# Clone your fork
+git clone https://github.com/your-username/ITC-Solar-Panel-Suitability-Mapping.git
+
+# Install with dev dependencies
+poetry install
+
+# Run tests before committing
+poetry run pytest
+
+# Format code
+poetry run black src/ tests/
+
+# Check code style
+poetry run flake8 src/ tests/
+```
 4. 📤 Push to the branch (`git push origin feature/AmazingFeature`)
 5. 🎉 Open a Pull Request
 
