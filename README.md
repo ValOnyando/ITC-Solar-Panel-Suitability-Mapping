@@ -17,10 +17,10 @@
 ## 🎯 Problem Statement
 
 Identify optimal rooftops for solar panel installation by analyzing:
-- 🏗️ **Building geometry** (roof area, orientation, slope)
-- ☀️ **Solar irradiance** (annual energy potential)
-- 🌑 **Shading effects** (nearby obstruction analysis)
-- 💰 **Economic viability** (ROI and cost-benefit analysis)
+- **Building geometry** (roof area, orientation, slope)
+- **Solar irradiance** (annual energy potential)
+- **Shading effects** (nearby obstruction analysis)
+- **Economic viability** (ROI and cost-benefit analysis)
 
 ---
 
