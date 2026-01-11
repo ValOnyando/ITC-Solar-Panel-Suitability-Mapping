@@ -2,6 +2,7 @@
 Solar Energy Module
 Calculates solar energy potential for buildings.
 """
+# Tuesday
 
 import numpy as np
 from typing import Optional
@@ -121,3 +122,116 @@ def calculate_payback_period(
         return float('inf')
     
     return cost / annual_revenue
+
+
+# ============================================================================
+# Main execution
+# ============================================================================
+
+if __name__ == "__main__":
+    import geopandas as gpd
+    import pandas as pd
+    
+    # =============================================================================
+    # FULL AMSTERDAM DATA (Run once to calculate complete dataset)
+    # Uncomment the block below to process full Amsterdam data
+    # =============================================================================
+    """
+    print("=" * 70)
+    print("SOLAR ENERGY CALCULATIONS - FULL AMSTERDAM DATA")
+    print("=" * 70)
+    
+    # Load processed buildings with solar data
+    buildings_gdf = gpd.read_file("data/processed_buildings.json")
+    
+    print(f"Calculating solar potential for {len(buildings_gdf)} buildings...")
+    
+    # Calculate solar potential
+    # Note: solar_irradiance is E_y from PVGIS (kWh/m²/year equivalent)
+    buildings_gdf['solar_potential_kwh'] = buildings_gdf.apply(
+        lambda row: calculate_solar_potential(
+            area=row.get('roof_area_m2', 0),
+            irradiance=row.get('solar_irradiance', 0) if row.get('solar_irradiance', 0) > 0 else 1000,
+            efficiency=0.18,
+            shading_factor=row.get('shading_factor', 0)
+        ), axis=1
+    )
+    
+    # Calculate ROI metrics
+    buildings_gdf['annual_savings_eur'] = buildings_gdf.apply(
+        lambda row: calculate_roi(
+            energy_kwh=row.get('solar_potential_kwh', 0),
+            energy_price=0.25
+        ), axis=1
+    )
+    
+    buildings_gdf['payback_period_years'] = buildings_gdf.apply(
+        lambda row: calculate_payback_period(
+            energy_kwh=row.get('solar_potential_kwh', 0),
+            energy_price=0.25,
+            installation_cost_per_m2=200,
+            area=row.get('roof_area_m2', 0)
+        ), axis=1
+    )
+    
+    # Save results
+    buildings_gdf.to_file("data/buildings_with_solar_analysis.json", driver="GeoJSON")
+    print(f"✓ Solar analysis complete! Saved to data/buildings_with_solar_analysis.json")
+    
+    print(f"\nSolar Energy Statistics:")
+    print(f"  Total potential: {buildings_gdf['solar_potential_kwh'].sum():,.0f} kWh/year")
+    print(f"  Average per building: {buildings_gdf['solar_potential_kwh'].mean():,.0f} kWh/year")
+    print(f"  Average payback: {buildings_gdf['payback_period_years'].median():.1f} years")
+    """
+    
+    # =============================================================================
+    # TEST DATA (Smaller subset for development and testing)
+    # This runs by default for quick iterations
+    # =============================================================================
+    print("=" * 70)
+    print("SOLAR ENERGY CALCULATIONS - TEST DATA (Small area for quick testing)")
+    print("=" * 70)
+    
+    # Load processed test buildings
+    buildings_gdf = gpd.read_file("data/processed_test_buildings.json")
+    
+    print(f"Calculating solar potential for {len(buildings_gdf)} buildings...")
+    
+    # Calculate solar potential
+    # Note: solar_irradiance is E_y from PVGIS (kWh/m²/year equivalent)
+    buildings_gdf['solar_potential_kwh'] = buildings_gdf.apply(
+        lambda row: calculate_solar_potential(
+            area=row.get('roof_area_m2', 0),
+            irradiance=row.get('solar_irradiance', 0) if row.get('solar_irradiance', 0) > 0 else 1000,
+            efficiency=0.18,
+            shading_factor=row.get('shading_factor', 0.1)  # Assume small default shading
+        ), axis=1
+    )
+    
+    # Calculate ROI metrics
+    buildings_gdf['annual_savings_eur'] = buildings_gdf.apply(
+        lambda row: calculate_roi(
+            energy_kwh=row.get('solar_potential_kwh', 0),
+            energy_price=0.25
+        ), axis=1
+    )
+    
+    buildings_gdf['payback_period_years'] = buildings_gdf.apply(
+        lambda row: calculate_payback_period(
+            energy_kwh=row.get('solar_potential_kwh', 0),
+            energy_price=0.25,
+            installation_cost_per_m2=200,
+            area=row.get('roof_area_m2', 0)
+        ), axis=1
+    )
+    
+    # Save results
+    buildings_gdf.to_file("data/test_buildings_with_solar_analysis.json", driver="GeoJSON")
+    print(f"✓ Solar analysis complete! Saved to data/test_buildings_with_solar_analysis.json")
+    
+    print(f"\nSolar Energy Statistics:")
+    print(f"  Total potential: {buildings_gdf['solar_potential_kwh'].sum():,.0f} kWh/year")
+    print(f"  Average per building: {buildings_gdf['solar_potential_kwh'].mean():,.0f} kWh/year")
+    print(f"  Average payback: {buildings_gdf['payback_period_years'].median():.1f} years")
+    
+    print("\n✓ Test data solar analysis complete!")
