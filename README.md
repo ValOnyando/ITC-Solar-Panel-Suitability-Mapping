@@ -571,7 +571,7 @@ Contributions welcome! Please follow these steps:
 ## 📧 Contact
 
 **Authors:** Vallary Onyando & Mo Anwar  
-**Email:** valonyando@gmail.com  
+**Email:** valonyando@gmail.com  , mohammadanwarx99@gmail.com
 **Course:** Scientific Programming for Geospatial Sciences - ITC, University of Twente  
 **Date:** January 2026
 
