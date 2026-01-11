@@ -186,3 +186,4 @@ function webglSupport() {{
 out = Path('buildings_3d_sample.html')
 out.write_text(html, encoding='utf-8')
 print('Saved sample HTML to', out.resolve())
+
