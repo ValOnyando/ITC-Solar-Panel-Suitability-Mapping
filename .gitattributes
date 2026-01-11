@@ -1,0 +1,16 @@
+# Git LFS Configuration for Large Files
+# Track large GeoJSON and data files with Git LFS
+# All JSON files in data/ directory
+data/*.json filter=lfs diff=lfs merge=lfs -text
+# Specific large output files
+data/footprints.json filter=lfs diff=lfs merge=lfs -text
+data/solar.json filter=lfs diff=lfs merge=lfs -text
+data/processed_buildings.json filter=lfs diff=lfs merge=lfs -text
+data/buildings_with_shading.json filter=lfs diff=lfs merge=lfs -text
+data/buildings_with_solar_analysis.json filter=lfs diff=lfs merge=lfs -text
+data/ranked_buildings.json filter=lfs diff=lfs merge=lfs -text
+data/top_100_buildings.json filter=lfs diff=lfs merge=lfs -text
+# GeoPackage files (if used)
+data/*.gpkg filter=lfs diff=lfs merge=lfs -text
+# Compressed data files
+data/*.json.gz filter=lfs diff=lfs merge=lfs -text
