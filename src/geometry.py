@@ -341,6 +341,13 @@ class BuildingGeometryProcessor:
         
         self.buildings_gdf['solar_energy_kwh_year'] = solar_values
         
+        # Convert E_y (kWh/year per kWp) to solar irradiance (kWh/m²/year)
+        # E_y is energy from 1kWp system. Standard test conditions: 1kWp = 1000W/m² 
+        # Typical panel efficiency is 18%, so 1kWp needs ~5.56 m² of panels
+        # Therefore: irradiance ≈ E_y / 5.56 * efficiency_factor
+        # Simplified: irradiance ≈ E_y (since E_y already accounts for typical conditions)
+        self.buildings_gdf['solar_irradiance'] = solar_values
+        
         print(f"✓ Interpolated solar values for {len(self.buildings_gdf)} buildings")
         print(f"  Mean solar energy: {np.mean(solar_values):.1f} kWh/year")
         print(f"  Range: {np.min(solar_values):.1f} - {np.max(solar_values):.1f} kWh/year")

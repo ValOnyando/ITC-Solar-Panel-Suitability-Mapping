@@ -123,10 +123,11 @@ def find_nearby_buildings(
     target_centroid = target_building.centroid
     
     # Use KD-tree range query to find buildings within radius
-    nearby_indices = spatial_index.find_nearby(target_centroid, radius=search_radius)
+    nearby_buildings = spatial_index.find_within_radius(target_centroid, radius=search_radius)
     
-    # Filter out the target building itself
-    nearby_buildings = all_buildings.iloc[nearby_indices].copy()
+    # If no nearby buildings found, return empty dataframe
+    if len(nearby_buildings) == 0:
+        return nearby_buildings
     
     # Calculate distances and sort
     nearby_buildings['distance'] = nearby_buildings.geometry.apply(

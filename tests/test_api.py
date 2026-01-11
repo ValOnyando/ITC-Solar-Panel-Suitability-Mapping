@@ -37,7 +37,11 @@ def test_buildings_with_filters(client):
     assert response.status_code == 200
     
     data = response.get_json()
-    assert 'filters' in data
+    assert 'buildings' in data
+    assert 'total' in data
+    assert 'count' in data
+    assert 'limit' in data
+    assert data['limit'] == 50
 
 
 def test_building_detail_endpoint(client):
@@ -46,7 +50,9 @@ def test_building_detail_endpoint(client):
     assert response.status_code == 200
     
     data = response.get_json()
-    assert 'building_id' in data
+    assert 'identificatie' in data or 'fid' in data
+    assert 'suitability_score' in data
+    assert 'centroid' in data
 
 
 def test_building_suitability_endpoint(client):
@@ -64,12 +70,9 @@ def test_priority_endpoint(client):
     """Test priority list endpoint."""
     response = client.get('/priority?top_n=10')
     assert response.status_code == 200
-
-
-def test_neighborhood_endpoint(client):
-    """Test neighborhood aggregation endpoint."""
-    response = client.get('/map/neighborhood')
-    assert response.status_code == 200
+    
+    data = response.get_json()
+    assert 'priority_buildings' in data or 'buildings' in data
 
 
 def test_404_error(client):

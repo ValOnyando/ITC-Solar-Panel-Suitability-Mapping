@@ -47,6 +47,10 @@ def load_buildings_data():
     return False
 
 
+# Load data when module is imported
+load_buildings_data()
+
+
 @app.route('/')
 def home():
     """API home endpoint with documentation."""

@@ -75,13 +75,6 @@ data/test_*.geojson
 *.prj
 *.cpg
 
-# Output files
-outputs/
-*.png
-*.jpg
-*.pdf
-*.html
-
 # OS
 .DS_Store
 Thumbs.db
