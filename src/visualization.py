@@ -650,51 +650,6 @@ def plot_suitability_distribution(
     print(f"Distribution plot saved to: {output_path}")
 
 
-def plot_correlation_matrix(
-    buildings_gdf: gpd.GeoDataFrame,
-    columns: Optional[List[str]] = None,
-    output_path: Optional[str] = None
-) -> None:
-    """
-    Create correlation matrix heatmap for numeric columns.
-    
-    Parameters
-    ----------
-    buildings_gdf : gpd.GeoDataFrame
-        GeoDataFrame with building attributes
-    columns : list, optional
-        List of columns to include. If None, uses all numeric columns
-    output_path : str, optional
-        Path to save the figure
-    """
-    if output_path is None:
-        output_path = FIGURES_DIR / "correlation_matrix.png"
-    
-    # Select numeric columns
-    if columns is None:
-        numeric_df = buildings_gdf.select_dtypes(include=[np.number])
-    else:
-        numeric_df = buildings_gdf[columns]
-    
-    # Calculate correlation matrix
-    corr_matrix = numeric_df.corr()
-    
-    # Create heatmap
-    fig, ax = plt.subplots(figsize=(12, 10))
-    sns.heatmap(corr_matrix, annot=True, fmt='.2f', cmap='coolwarm', 
-                center=0, square=True, linewidths=1, ax=ax,
-                cbar_kws={'label': 'Correlation Coefficient'})
-    
-    ax.set_title('Correlation Matrix of Building Attributes', 
-                 fontsize=14, fontweight='bold', pad=20)
-    
-    plt.tight_layout()
-    plt.savefig(output_path, bbox_inches='tight')
-    plt.close()
-    
-    print(f"Correlation matrix saved to: {output_path}")
-
-
 def plot_top_buildings(
     buildings_gdf: gpd.GeoDataFrame,
     suitability_column: str = 'suitability_score',
@@ -921,11 +876,6 @@ def create_visualization_suite(
     plot_suitability_distribution(buildings_gdf, suitability_column)
     plot_top_buildings(buildings_gdf, suitability_column)
     
-    # Generate correlation matrix if enough numeric columns
-    numeric_cols = buildings_gdf.select_dtypes(include=[np.number]).columns
-    if len(numeric_cols) > 2:
-        plot_correlation_matrix(buildings_gdf)
-    
     # Generate summary report
     generate_summary_report(buildings_gdf, suitability_column)
     
@@ -1091,19 +1041,8 @@ if __name__ == "__main__":
             else:
                 print("\n5️⃣  Skipping pairwise analysis (energy_potential column not found)")
             
-            # 6. Correlation matrix
-            if 'roof_area' in buildings.columns and 'energy_potential' in buildings.columns:
-                print("\n6️⃣  Generating correlation matrix...")
-                plot_correlation_matrix(
-                    buildings,
-                    output_path=str(FIGURES_DIR / f"correlation_matrix{suffix}.png")
-                )
-                print(f"   ✓ Saved: {FIGURES_DIR / f'correlation_matrix{suffix}.png'}")
-            else:
-                print("\n6️⃣  Skipping correlation matrix (missing required columns)")
-            
-            # 7. Top N buildings chart
-            print(f"\n7️⃣  Generating top {top_n} buildings chart...")
+            # 6. Top N buildings chart
+            print(f"\n6️⃣  Generating top {top_n} buildings chart...")
             plot_top_buildings(
                 buildings,
                 suitability_column='suitability_score',
