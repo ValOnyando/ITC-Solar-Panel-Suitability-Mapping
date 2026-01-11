@@ -212,9 +212,10 @@ def create_interactive_folium_map(
         print(f"⚠️  Dataset has {len(buildings_for_map)} buildings. Sampling top {max_features} by {column} for performance.")
         buildings_for_map = buildings_for_map.nlargest(max_features, column)
     
-    # Get map center
-    center_lat = buildings_for_map.geometry.centroid.y.mean()
-    center_lon = buildings_for_map.geometry.centroid.x.mean()
+    # Get map center using bounds (better for geographic coordinates)
+    bounds = buildings_for_map.total_bounds  # [minx, miny, maxx, maxy]
+    center_lon = (bounds[0] + bounds[2]) / 2
+    center_lat = (bounds[1] + bounds[3]) / 2
     
     # Create map
     m = folium.Map(
@@ -396,9 +397,10 @@ def create_top_buildings_map(
     # Keep only geometry and the column we're displaying
     top_buildings_simple = top_buildings[[column, 'geometry']].copy()
     
-    # Get map center
-    center_lat = top_buildings_simple.geometry.centroid.y.mean()
-    center_lon = top_buildings_simple.geometry.centroid.x.mean()
+    # Get map center using bounds (better for geographic coordinates)
+    bounds = top_buildings_simple.total_bounds  # [minx, miny, maxx, maxy]
+    center_lon = (bounds[0] + bounds[2]) / 2
+    center_lat = (bounds[1] + bounds[3]) / 2
     
     # Create map
     m = folium.Map(
