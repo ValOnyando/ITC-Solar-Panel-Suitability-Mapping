@@ -57,6 +57,8 @@ The system produces actionable priority lists for sustainable urban energy plann
 - `seaborn` - Statistical visualization
 - `plotly` - Interactive charts
 
+![Solar Potential Choropleth](outputs/maps/solar_potential_choropleth_amsterdam.png)
+
 </td>
 </tr>
 </table>
